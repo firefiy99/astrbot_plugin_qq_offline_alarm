@@ -1,0 +1,2 @@
+# 本插件仅使用 Python 标准库（smtplib / email / asyncio）实现邮件发送，
+# 无需任何第三方依赖。

@@ -1,0 +1,73 @@
+{
+  "enabled": {
+    "description": "是否启用 QQ 登录状态监控与邮件告警",
+    "type": "bool",
+    "default": true
+  },
+  "platform_ids": {
+    "description": "监控的 aiocqhttp 平台 ID（多 QQ 账号时填写，多个用英文逗号分隔）",
+    "type": "text",
+    "hint": "留空时自动监控全部 aiocqhttp 平台；填写时只监控列出的平台",
+    "default": ""
+  },
+  "check_interval_seconds": {
+    "description": "登录状态检查间隔（秒），建议不小于 10",
+    "type": "int",
+    "default": 30
+  },
+  "offline_threshold_seconds": {
+    "description": "连续离线超过该时长才发送掉线告警邮件（秒），避免短暂波动误报",
+    "type": "int",
+    "hint": "建议为检查间隔的 2~3 倍，例如间隔 30 秒时设置为 90",
+    "default": 90
+  },
+  "smtp_host": {
+    "description": "SMTP 服务器地址，如 smtp.qq.com",
+    "type": "string",
+    "default": "smtp.qq.com"
+  },
+  "smtp_port": {
+    "description": "SMTP 端口：465（SSL）或 587（STARTTLS）",
+    "type": "int",
+    "default": 465
+  },
+  "smtp_ssl": {
+    "description": "true 使用 SSL 直连（465）；false 使用 STARTTLS（587）",
+    "type": "bool",
+    "default": true
+  },
+  "smtp_user": {
+    "description": "发件邮箱地址（QQ 邮箱），如 123456@qq.com",
+    "type": "string",
+    "default": ""
+  },
+  "smtp_auth_code": {
+    "description": "发件邮箱 SMTP 授权码（非邮箱登录密码，需在 QQ 邮箱设置中开启 SMTP 并生成授权码）",
+    "type": "string",
+    "hint": "授权码属于敏感信息，不会出现在日志中",
+    "default": ""
+  },
+  "smtp_from_name": {
+    "description": "邮件发件人显示名称，留空使用发件邮箱地址",
+    "type": "string",
+    "default": ""
+  },
+  "notify_emails": {
+    "description": "接收告警邮件的邮箱地址，多个用英文逗号、中文逗号、空格或换行分隔；留空表示不发送",
+    "type": "text",
+    "hint": "例如：owner@qq.com, backup@example.com",
+    "obvious_hint": true,
+    "default": ""
+  },
+  "notify_on_recover": {
+    "description": "QQ 恢复在线时是否发送恢复通知邮件",
+    "type": "bool",
+    "default": true
+  },
+  "admin_list": {
+    "description": "允许执行 /掉线哨兵 指令的管理员 QQ 号，多个用英文逗号、中文逗号、空格或换行分隔；留空时仅本人可查询，不允许执行测试发送",
+    "type": "text",
+    "hint": "例如：10001, 10002",
+    "default": ""
+  }
+}
