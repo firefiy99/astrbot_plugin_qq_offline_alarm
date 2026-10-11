@@ -4,7 +4,7 @@ desc: 轮询 OneBot(NapCat) 的 get_status 判断 QQ 登录状态，掉线持续
 short_desc: QQ 掉线邮件告警
 help: 使用 /掉线哨兵 查看当前登录状态，使用 /掉线哨兵帮助 查看完整说明。
 author: 小星萤
-version: 1.0.0
+version: 1.0.1
 repo: "https://github.com/firefiy99/astrbot_plugin_qq_offline_alarm"
 support_platforms:
   - aiocqhttp

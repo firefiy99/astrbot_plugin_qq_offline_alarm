@@ -416,7 +416,9 @@ class QQOfflineAlarmPlugin(Star):
         display = conf["from_name"] or from_addr
         msg = MIMEText(body, "plain", "utf-8")
         msg["Subject"] = Header(subject, "utf-8")
-        msg["From"] = formataddr((str(Header(display, "utf-8")), from_addr))
+        # 直接用 formataddr 让 email 库按 RFC2047 正确编码非 ASCII 发件人名称，
+        # 避免 str(Header(...)) 嵌套导致 From 头双重编码、邮件被服务端拒收/静默丢弃。
+        msg["From"] = formataddr((display, from_addr))
         msg["To"] = ", ".join(to_addrs)
         timeout = 20
         if conf["ssl"]:
@@ -525,10 +527,16 @@ class QQOfflineAlarmPlugin(Star):
             subject="[测试] QQ 掉线哨兵 SMTP 配置测试",
             body=(
                 "这是一封测试邮件，说明 QQ 掉线哨兵的 SMTP 配置可用。\n\n"
-                f"发送时间：{_fmt_ts(_now())}"
+                f"发送时间：{_fmt_ts(_now())}\n"
+                f"发件邮箱：{conf['user']}\n"
+                f"收件邮箱：{', '.join(self._notify_emails())}"
             ),
         )
-        yield event.plain_result(f"测试邮件：{message}")
+        yield event.plain_result(
+            f"测试邮件：{message}\n"
+            f"发件：{conf['user']}\n"
+            f"收件：{', '.join(self._notify_emails())}"
+        )
 
     @offline_group.command("帮助")
     async def help_cmd(self, event: AstrMessageEvent):
