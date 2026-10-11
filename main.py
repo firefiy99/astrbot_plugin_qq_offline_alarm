@@ -33,6 +33,28 @@ PLUGIN_NAME = "astrbot_plugin_qq_offline_alarm"
 DATA_DIR = Path(get_astrbot_data_path()) / "plugin_data" / PLUGIN_NAME
 STATE_PATH = DATA_DIR / "state.json"
 
+# 默认邮件模板（用户未自定义时使用）。可用变量：
+#   掉线邮件：{qq} {nickname} {offline_at} {now} {duration}
+#   恢复邮件：{qq} {nickname} {recover_at} {duration}
+DEFAULT_OFFLINE_SUBJECT = "[QQ掉线提醒] QQ {qq} 已掉线"
+DEFAULT_OFFLINE_BODY = (
+    "QQ 账号检测到掉线！\n\n"
+    "QQ 号：{qq}\n"
+    "昵称：{nickname}\n"
+    "检测到离线时间：{offline_at}\n"
+    "当前时间：{now}\n"
+    "持续离线：{duration}\n\n"
+    "请尽快检查 NapCat / QQ 登录状态。"
+)
+DEFAULT_RECOVER_SUBJECT = "[QQ恢复通知] QQ {qq} 已恢复在线"
+DEFAULT_RECOVER_BODY = (
+    "QQ 账号已恢复在线。\n\n"
+    "QQ 号：{qq}\n"
+    "昵称：{nickname}\n"
+    "恢复时间：{recover_at}\n"
+    "离线时长：{duration}"
+)
+
 # 邮件时间统一按北京时间展示，与部署环境时区无关。
 try:
     LOCAL_TZ = ZoneInfo("Asia/Shanghai")
@@ -336,14 +358,18 @@ class QQOfflineAlarmPlugin(Star):
             record["recovered_at"] = now.isoformat(timespec="seconds")
             logger.info(f"[qq_offline_alarm] QQ {self_id} 已恢复在线")
             if self._cfg_bool("notify_on_recover", True):
+                recover_vars = {
+                    "qq": self_id,
+                    "nickname": record.get("nickname", ""),
+                    "recover_at": _fmt_ts(now),
+                    "duration": duration,
+                }
                 await self._send_mail_async(
-                    subject=f"[QQ恢复通知] QQ {self_id} 已恢复在线",
-                    body=(
-                        f"QQ 账号已恢复在线。\n\n"
-                        f"QQ 号：{self_id}\n"
-                        f"昵称：{record.get('nickname', '')}\n"
-                        f"恢复时间：{_fmt_ts(now)}\n"
-                        f"离线时长：{duration}"
+                    subject=self._render_mail(
+                        "mail_subject_recover", DEFAULT_RECOVER_SUBJECT, recover_vars
+                    ),
+                    body=self._render_mail(
+                        "mail_body_recover", DEFAULT_RECOVER_BODY, recover_vars
                     ),
                 )
             # 重置状态，为下一次掉线重新武装
@@ -376,18 +402,37 @@ class QQOfflineAlarmPlugin(Star):
         logger.warning(
             f"[qq_offline_alarm] QQ {self_id} 持续离线超过阈值，发送掉线告警邮件"
         )
+        offline_vars = {
+            "qq": self_id,
+            "nickname": record.get("nickname", ""),
+            "offline_at": _fmt_ts(since),
+            "now": _fmt_ts(now),
+            "duration": self._duration_text(offline_since, now),
+        }
         await self._send_mail_async(
-            subject=f"[QQ掉线提醒] QQ {self_id} 已掉线",
-            body=(
-                f"QQ 账号检测到掉线！\n\n"
-                f"QQ 号：{self_id}\n"
-                f"昵称：{record.get('nickname', '')}\n"
-                f"检测到离线时间：{_fmt_ts(since)}\n"
-                f"当前时间：{_fmt_ts(now)}\n"
-                f"持续离线：{self._duration_text(offline_since, now)}\n\n"
-                f"请尽快检查 NapCat / QQ 登录状态。"
+            subject=self._render_mail(
+                "mail_subject_offline", DEFAULT_OFFLINE_SUBJECT, offline_vars
+            ),
+            body=self._render_mail(
+                "mail_body_offline", DEFAULT_OFFLINE_BODY, offline_vars
             ),
         )
+
+    @staticmethod
+    def _render_template(template: str, variables: dict) -> str:
+        """把 {key} 占位符替换为变量值；未识别的占位符原样保留。"""
+        for key, value in variables.items():
+            template = template.replace("{" + key + "}", str(value))
+        return template
+
+    def _render_mail(self, config_key: str, default_template: str, variables: dict) -> str:
+        """读取自定义邮件模板，留空时回退到默认模板。"""
+        raw = self.config.get(config_key, None)
+        if raw is None or not str(raw).strip():
+            template = default_template
+        else:
+            template = str(raw)
+        return self._render_template(template, variables)
 
     @staticmethod
     def _duration_text(offline_since: Optional[str], now: datetime) -> str:

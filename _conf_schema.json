@@ -64,6 +64,30 @@
     "type": "bool",
     "default": true
   },
+  "mail_subject_offline": {
+    "description": "掉线告警邮件主题模板；留空使用默认。可用变量：{qq} {nickname} {offline_at} {now} {duration}",
+    "type": "string",
+    "hint": "例如：[紧急] QQ {qq} 已掉线 {duration}",
+    "default": ""
+  },
+  "mail_body_offline": {
+    "description": "掉线告警邮件正文模板（支持多行）；留空使用默认。可用变量：{qq} {nickname} {offline_at} {now} {duration}",
+    "type": "text",
+    "hint": "例如：QQ {qq}（{nickname}）掉线了！离线时间 {offline_at}，持续 {duration}。当前时间 {now}。",
+    "default": ""
+  },
+  "mail_subject_recover": {
+    "description": "恢复通知邮件主题模板；留空使用默认。可用变量：{qq} {nickname} {recover_at} {duration}",
+    "type": "string",
+    "hint": "例如：[通知] QQ {qq} 已恢复",
+    "default": ""
+  },
+  "mail_body_recover": {
+    "description": "恢复通知邮件正文模板（支持多行）；留空使用默认。可用变量：{qq} {nickname} {recover_at} {duration}",
+    "type": "text",
+    "hint": "例如：QQ {qq} 于 {recover_at} 恢复在线，离线时长 {duration}。",
+    "default": ""
+  },
   "admin_list": {
     "description": "允许执行 /掉线哨兵 指令的管理员 QQ 号，多个用英文逗号、中文逗号、空格或换行分隔；留空时仅本人可查询，不允许执行测试发送",
     "type": "text",
